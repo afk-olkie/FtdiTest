@@ -101,8 +101,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //----------------------------------------------------------------------------------------------------------------
 // SETTINGS YOU CAN ADJUST
 //----------------------------------------------------------------------------------------------------------------
+    //define for AFK_DEVICE_INDEX_TO_USE
+    #define AFK_DEVICE_INDEX_PROMPT_USER -1
+    
     //this controls which FTDI IC to use if you have multiples
-    #define AFK_DEVICE_INDEX_TO_USE 0
+    //if = -1, then the user will be prompted 
+    #define AFK_DEVICE_INDEX_TO_USE   AFK_DEVICE_INDEX_PROMPT_USER
 
     //if true, the FTDI IC will run in ASYNC mode (default).
     #define AFK_RUN_ASYNC_245 true
@@ -134,7 +138,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 // PROGRAM GUTS BELOW
 //----------------------------------------------------------------------------------------------------------------
 
-
+//this controls which FTDI IC to use if you have multiples 
+int deviceIndexToUse = AFK_DEVICE_INDEX_TO_USE; 
 
 
 /*
@@ -159,12 +164,24 @@ if (ftdiStatus != FT_OK) \
 */
 int main(int argc, char* argv[]) {
     int result;
-    printf("FTDI IC test starting!\n");
+    printf("FTDI Speed Test Program\n");
+    printf("-----------------------\n");
 
     result = printFtdiInfo();
     if (result != 0){
         printf("Cannot run tests. Exiting app.");
     } else {
+    
+        while(deviceIndexToUse == AFK_DEVICE_INDEX_PROMPT_USER){
+            printf("\n\nPlease enter Device Handle # to use: ");
+            std::cin >> deviceIndexToUse;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+        
+        printf("Ready to run tests using device %d... ", deviceIndexToUse);     
+        system("pause");
+        
         //geting info worked. Now run tests.
         result = runReadSpeedTest();
     }
@@ -210,8 +227,8 @@ int runReadSpeedTest(){
     printf("Entered Read Speed Test\n");
 
     //open device for use
-    printf("opening device %d...", AFK_DEVICE_INDEX_TO_USE);
-    ftdiStatus = FT_Open(AFK_DEVICE_INDEX_TO_USE, &ftdiHandle);
+    printf("opening device %d...", deviceIndexToUse);
+    ftdiStatus = FT_Open(deviceIndexToUse, &ftdiHandle);
     gotoExitIfNotOk(ftdiStatus, "FT_Open");
     printf(" done\n");
 
@@ -274,7 +291,7 @@ int runReadSpeedTest(){
 
         //print update if desired
         if (AFK_READ_INTERIM_UPDATES > 0 && readCount % AFK_READ_INTERIM_UPDATES == 0){
-            printf("Read status update %d/%d", readCount, AFK_NUMBER_OF_READS);
+            printf("Read status update %d/%d\n", readCount, AFK_NUMBER_OF_READS);
         }
 
     }
@@ -318,7 +335,7 @@ int printFtdiInfo(){
     // get number of connected devices
     ftdiStatus = FT_CreateDeviceInfoList(&deviceCount);
     gotoExitIfNotOk(ftdiStatus, "Reading device count");
-    printf("Number of devices is %d\n", deviceCount);
+    printf("Number of devices is %d\n\n\n", deviceCount);
 
     if (deviceCount <= 0) {
         printf("No devices found. Please connect a device and try again.\n");
@@ -332,7 +349,7 @@ int printFtdiInfo(){
         ftdiStatus = FT_GetDeviceInfoList(deviceInfo, &deviceCount);
         gotoExitIfNotOk(ftdiStatus, "FT_GetDeviceInfoList");
         for (unsigned int i = 0; i < deviceCount; i++) {
-            printf("Device %d:\n", i);
+            printf("Device Handle # %d:\n", i);
             printf(" Flags=0x%x\n", deviceInfo[i].Flags);
             printf(" Type=0x%x\n", deviceInfo[i].Type);
             printf(" ID=0x%x\n", deviceInfo[i].ID);

@@ -6,6 +6,9 @@
 #include <iostream>
 #include <Windows.h> //must be above ftd2xx.h include
 
+#undef max 
+#include <limits>
+
 LARGE_INTEGER lPreTime, lPostTime, lFrequency;
 void startTiming(){
     QueryPerformanceFrequency(&lFrequency);
