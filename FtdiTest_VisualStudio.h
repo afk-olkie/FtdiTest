@@ -1,3 +1,5 @@
+//Use this file when building a Visual Studio solution (AKA for Windows)
+//A Linux equivalent needs to created.
 #ifndef FTDITEST_VISUALSTUDIO_H
 #define FTDITEST_VISUALSTUDIO_H
 
